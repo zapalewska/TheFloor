@@ -91,6 +91,26 @@
         box-shadow: 0 18px 52px rgba(0, 0, 0, 0.34), inset 0 0 30px rgba(24, 216, 255, 0.08);
       }
 
+      .photo-frame.missing .photo {
+        opacity: 0.16;
+      }
+
+      .photo-placeholder {
+        position: absolute;
+        inset: 0;
+        display: none;
+        place-items: center;
+        padding: 24px;
+        color: var(--muted);
+        font-size: clamp(1rem, 2vw, 1.5rem);
+        font-weight: 850;
+        text-align: center;
+      }
+
+      .photo-frame.missing .photo-placeholder {
+        display: grid;
+      }
+
       .photo {
         width: 100%;
         height: 100%;
@@ -368,8 +388,9 @@
   <body>
     <main class="stage">
       <section class="photo-board" aria-label="Zdjecie do kategorii">
-        <div class="photo-frame">
+        <div class="photo-frame" id="photoFrame">
           <img class="photo" id="categoryPhoto" alt="Owoc do odgadniecia">
+          <div class="photo-placeholder" id="photoPlaceholder">Brak zdjec dla tej kategorii</div>
         </div>
       </section>
 
@@ -431,28 +452,158 @@
         left: 45,
         right: 45,
         photoIndex: 0,
+        photoQueue: [],
+        photoCategoryKey: "",
         lastTick: null,
         raf: null
       };
 
-      const fruitPhotos = [
-        {
-          name: "Jablko",
-          src: "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?auto=format&fit=crop&w=1200&q=80"
-        },
-        {
-          name: "Banan",
-          src: "https://images.unsplash.com/photo-1528825871115-3581a5387919?auto=format&fit=crop&w=1200&q=80"
-        },
-        {
-          name: "Truskawka",
-          src: "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=1200&q=80"
-        },
-        {
-          name: "Pomarancza",
-          src: "https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&w=1200&q=80"
-        }
-      ];
+      const categoryPhotos = {
+        owoce: [
+          {
+            name: "Jablko",
+            src: "https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?auto=format&fit=crop&w=1200&q=80"
+          },
+          {
+            name: "Banan",
+            src: "https://images.unsplash.com/photo-1528825871115-3581a5387919?auto=format&fit=crop&w=1200&q=80"
+          },
+          {
+            name: "Truskawka",
+            src: "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?auto=format&fit=crop&w=1200&q=80"
+          },
+          {
+            name: "Pomarancza",
+            src: "https://images.unsplash.com/photo-1547514701-42782101795e?auto=format&fit=crop&w=1200&q=80"
+          }
+        ],
+        "harry potter": [
+          {
+            name: "Harry Potter",
+            src: "images/harry-potter/514Lfa5ZwhL._AC_UF894,1000_QL80_.jpg"
+          },
+          {
+            name: "Aragog",
+            src: "images/harry-potter/aragog.webp"
+          },
+          {
+            name: "Bazyliszek",
+            src: "images/harry-potter/bazyliszek.webp"
+          },
+          {
+            name: "Bellatrix Lestrange",
+            src: "images/harry-potter/bellatrix lestrange.webp"
+          },
+          {
+            name: "Cedric Diggory",
+            src: "images/harry-potter/cedric-diggory_.png"
+          },
+          {
+            name: "Czara Ognia",
+            src: "images/harry-potter/czara ognia.jpeg"
+          },
+          {
+            name: "Czarna Rozdzka",
+            src: "images/harry-potter/czarna rozdzka.jpg"
+          },
+          {
+            name: "Dolores Umbridge",
+            src: "images/harry-potter/DoloresUmbridge.jpeg"
+          },
+          {
+            name: "Dziennik Toma Riddla",
+            src: "images/harry-potter/dziennik toma riddla.webp"
+          },
+          {
+            name: "Gilderoy Lockhart",
+            src: "images/harry-potter/GilderoyLockhart_.jpg"
+          },
+          {
+            name: "Ginny Weasley",
+            src: "images/harry-potter/ginny-weasley_.png"
+          },
+          {
+            name: "Hedwiga",
+            src: "images/harry-potter/Hedwig_WB_F3_HedwigInTheForest_Still_100615_Port.webp"
+          },
+          {
+            name: "Jeczaca Marta",
+            src: "images/harry-potter/jęcząca marta.webp"
+          },
+          {
+            name: "Kamien Filozoficzny",
+            src: "images/harry-potter/kamien filozoficzny.webp"
+          },
+          {
+            name: "Komnata Tajemnic",
+            src: "images/harry-potter/komnata tajemnic.webp"
+          },
+          {
+            name: "Lucius Malfoy",
+            src: "images/harry-potter/lucius malfoy.png"
+          },
+          {
+            name: "Mandragory",
+            src: "images/harry-potter/Mandragory.webp"
+          },
+          {
+            name: "Mapa Huncwotow",
+            src: "images/harry-potter/mapa huncwotow.jpg"
+          },
+          {
+            name: "Minerva McGonagall",
+            src: "images/harry-potter/Minerva McGonagall.jpg"
+          },
+          {
+            name: "Nagini",
+            src: "images/harry-potter/nagini.jpeg"
+          },
+          {
+            name: "Patronus",
+            src: "images/harry-potter/patronus.jpg"
+          },
+          {
+            name: "Peter Pettigrew",
+            src: "images/harry-potter/peter-pettigrew_.png"
+          },
+          {
+            name: "Diadem Ravenclaw",
+            src: "images/harry-potter/ravenclaws-diadem_.png"
+          },
+          {
+            name: "Remus Lupin",
+            src: "images/harry-potter/RemusLupin.webp"
+          },
+          {
+            name: "Severus Snape",
+            src: "images/harry-potter/severus snape.webp"
+          },
+          {
+            name: "Syriusz Black",
+            src: "images/harry-potter/syriusz black.jfif"
+          },
+          {
+            name: "Tiara Przydzialu",
+            src: "images/harry-potter/tiara przydzialu.webp"
+          },
+          {
+            name: "Wyjec",
+            src: "images/harry-potter/wyjec.webp"
+          },
+          {
+            name: "Zakazany Las",
+            src: "images/harry-potter/zakazany las.webp"
+          },
+          {
+            name: "Zgredek",
+            src: "images/harry-potter/zgredek.jpg"
+          },
+          {
+            name: "Zloty Znicz",
+            src: "images/harry-potter/złoty znicz.webp"
+          }
+        ]
+      };
 
       const elements = {
         leftName: document.querySelector("#leftName"),
@@ -468,7 +619,9 @@
         rightClock: document.querySelector("#rightClock"),
         leftMeter: document.querySelector("#leftMeter"),
         rightMeter: document.querySelector("#rightMeter"),
+        photoFrame: document.querySelector("#photoFrame"),
         categoryPhoto: document.querySelector("#categoryPhoto"),
+        photoPlaceholder: document.querySelector("#photoPlaceholder"),
         nextPhotoButton: document.querySelector("#nextPhotoButton"),
         addButton: document.querySelector("#addButton"),
         passButton: document.querySelector("#passButton"),
@@ -481,6 +634,24 @@
       function normalizeText(value, fallback) {
         const text = value.trim();
         return text.length ? text : fallback;
+      }
+
+      function normalizeCategory(value) {
+        return value
+          .trim()
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/\s+/g, " ");
+      }
+
+      function getCurrentPhotos() {
+        const key = normalizeCategory(elements.categoryInput.value);
+        return categoryPhotos[key] || [];
+      }
+
+      function getCurrentCategoryKey() {
+        return normalizeCategory(elements.categoryInput.value);
       }
 
       function formatSeconds(value) {
@@ -526,18 +697,68 @@
       }
 
       function showPhoto(index) {
-        const photo = fruitPhotos[index];
+        const photos = getCurrentPhotos();
+        const photo = photos[index];
+
+        if (!photo) {
+          elements.photoFrame.classList.add("missing");
+          elements.categoryPhoto.removeAttribute("src");
+          elements.categoryPhoto.alt = "Brak zdjec dla wybranej kategorii";
+          elements.photoPlaceholder.textContent = "Brak zdjec dla tej kategorii";
+          return;
+        }
+
+        elements.photoFrame.classList.remove("missing");
         elements.categoryPhoto.src = photo.src;
-        elements.categoryPhoto.alt = `${photo.name} - zdjecie do kategorii owoce`;
+        elements.categoryPhoto.alt = `${photo.name} - zdjecie do kategorii ${elements.categoryInput.value}`;
+      }
+
+      function shuffle(values) {
+        const shuffled = [...values];
+        for (let index = shuffled.length - 1; index > 0; index -= 1) {
+          const randomIndex = Math.floor(Math.random() * (index + 1));
+          [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+        }
+        return shuffled;
+      }
+
+      function refillPhotoQueue(photos) {
+        state.photoQueue = shuffle(photos.map((_, index) => index));
+        if (photos.length > 1 && state.photoQueue[0] === state.photoIndex) {
+          state.photoQueue.push(state.photoQueue.shift());
+        }
       }
 
       function randomizePhoto() {
-        let nextIndex = Math.floor(Math.random() * fruitPhotos.length);
-        if (fruitPhotos.length > 1 && nextIndex === state.photoIndex) {
-          nextIndex = (nextIndex + 1) % fruitPhotos.length;
+        const photos = getCurrentPhotos();
+        const categoryKey = getCurrentCategoryKey();
+
+        if (!photos.length) {
+          state.photoIndex = 0;
+          state.photoQueue = [];
+          state.photoCategoryKey = categoryKey;
+          showPhoto(state.photoIndex);
+          return;
         }
-        state.photoIndex = nextIndex;
+
+        if (state.photoCategoryKey !== categoryKey) {
+          state.photoCategoryKey = categoryKey;
+          refillPhotoQueue(photos);
+        }
+
+        if (!state.photoQueue.length) {
+          return;
+        }
+
+        state.photoIndex = state.photoQueue.shift();
         showPhoto(state.photoIndex);
+      }
+
+      function resetPhotoForCategory() {
+        state.photoIndex = 0;
+        state.photoCategoryKey = getCurrentCategoryKey();
+        refillPhotoQueue(getCurrentPhotos());
+        randomizePhoto();
       }
 
       function flashPlayer(side) {
@@ -622,7 +843,10 @@
 
       elements.leftInput.addEventListener("input", render);
       elements.rightInput.addEventListener("input", render);
-      elements.categoryInput.addEventListener("input", render);
+      elements.categoryInput.addEventListener("input", () => {
+        render();
+        resetPhotoForCategory();
+      });
       elements.roundInput.addEventListener("change", resetRound);
       elements.leftPlayer.addEventListener("click", () => handlePlayerClick("left"));
       elements.rightPlayer.addEventListener("click", () => handlePlayerClick("right"));
@@ -634,6 +858,10 @@
       elements.addButton.addEventListener("click", () => adjustActive(5));
       elements.passButton.addEventListener("click", () => passPlayer(state.active));
       elements.resetButton.addEventListener("click", resetRound);
+      elements.categoryPhoto.addEventListener("error", () => {
+        elements.photoFrame.classList.add("missing");
+        elements.photoPlaceholder.textContent = "Nie znaleziono pliku zdjecia";
+      });
 
       elements.hideButton.addEventListener("click", () => {
         elements.controls.classList.add("hidden");
@@ -666,7 +894,7 @@
         }
       });
 
-      showPhoto(state.photoIndex);
+      resetPhotoForCategory();
       render();
     </script>
   </body>
